@@ -84,7 +84,7 @@ class SessionGraph(Module):
         a = torch.sum(alpha * hidden * mask.view(mask.shape[0], -1, 1).float(), 1)
         if not self.nonhybrid:
             a = self.linear_transform(torch.cat([a, ht], 1))
-        b = self.embedding.weight[1:]  # n_nodes x latent_size
+        b = self.embedding.weight[:]  # n_nodes x latent_size
         scores = torch.matmul(a, b.transpose(1, 0))
         return scores
 
@@ -130,7 +130,7 @@ def train_test(model, train_data, test_data):
         model.optimizer.zero_grad()
         targets, scores = forward(model, i, train_data)
         targets = trans_to_cuda(torch.Tensor(targets).long())
-        loss = model.loss_function(scores, targets - 1)
+        loss = model.loss_function(scores, targets)
         loss.backward()
         model.optimizer.step()
         total_loss += loss
@@ -153,22 +153,22 @@ def train_test(model, train_data, test_data):
         sub_scores_10 = trans_to_cpu(sub_scores_10).detach().numpy()
 
         for score, target, mask in zip(sub_scores_1, targets, test_data.mask):
-            hit1.append(np.isin(target -1, score))
+            hit1.append(np.isin(target, score))
 
         for score, target, mask in zip(sub_scores_5, targets, test_data.mask):
-            hit5.append(np.isin(target -1, score))
-            if len(np.where(score == target -1)[0]) == 0:
+            hit5.append(np.isin(target, score))
+            if len(np.where(score == target)[0]) == 0:
                 ndcg5.append(0)
             else:
-                index = np.where(score == target - 1)[0][0]
+                index = np.where(score == target)[0][0]
                 ndcg5.append(1 / math.log(index + 2, 2))
 
         for score, target, mask in zip(sub_scores_10, targets, test_data.mask):
-            hit10.append(np.isin(target - 1, score))
+            hit10.append(np.isin(target, score))
             if len(np.where(score == target -1)[0]) == 0:
                 ndcg10.append(0)
             else:
-                index = np.where(score == target - 1)[0][0]
+                index = np.where(score == target)[0][0]
                 ndcg10.append(1 / math.log(index + 2, 2))
 
     hit1, hit5, hit10 = np.mean(hit1), np.mean(hit5), np.mean(hit10)
