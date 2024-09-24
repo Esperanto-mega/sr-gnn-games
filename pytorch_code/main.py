@@ -48,7 +48,7 @@ def main():
         n_node = 9922
     elif opt.dataset == 'Games':
         n_node = 16859
-    elif: opt.dataset == 'Arts'
+    elif opt.dataset == 'Arts':
         n_node = 20956
     else:
         n_node = 310
@@ -85,7 +85,7 @@ def main():
             best_epoch[4] = epoch
             flag = 1
         print('Best Result:')
-        print('\thit@1:\t%.4f\thit@5:\t%.4f\thit@10:\t%.4f\tndcg@5:\t%.4f\tndcg@10:\t%.4f\tEpoch:\t%d,\t%d'% (best_result[0], best_result[1], best_result[2], best_result[3], best_result[4], 
+        print('\thit@1:\t%.4f\thit@5:\t%.4f\thit@10:\t%.4f\tndcg@5:\t%.4f\tndcg@10:\t%.4f\tEpoch:\t%d,\t%d,\t%d,\t%d,\t%d'% (best_result[0], best_result[1], best_result[2], best_result[3], best_result[4], 
                                                                                                               best_epoch[0], best_epoch[1], best_epoch[2], best_epoch[3], best_epoch[4]))
         bad_counter += 1 - flag
         if bad_counter >= opt.patience:
