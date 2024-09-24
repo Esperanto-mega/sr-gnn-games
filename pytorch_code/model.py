@@ -141,7 +141,7 @@ def train_test(model, train_data, test_data):
     print('start predicting: ', datetime.datetime.now())
     model.eval()
 
-    hit1, hit5, hi10, ndcg5, ndcg10 = [], [], [], [], []
+    hit1, hit5, hit10, ndcg5, ndcg10 = [], [], [], [], []
     
     # hit, mrr = [], []
     slices = test_data.generate_batch(model.batch_size)
@@ -171,6 +171,6 @@ def train_test(model, train_data, test_data):
                 index = np.where(score == target - 1)[0][0]
                 ndcg10.append(1 / math.log(index + 2, 2))
 
-    hit1, hit5, hit10 = np.mean(hit1) * 100, np.mean(hit5) * 100, np.mean(hit10) * 100
-    ndcg5, ndcg10 = np.mean(ndcg5) * 100, np.mean(ndcg10) * 100
+    hit1, hit5, hit10 = np.mean(hit1), np.mean(hit5), np.mean(hit10)
+    ndcg5, ndcg10 = np.mean(ndcg5), np.mean(ndcg10)
     return hit1, hit5, hit10, ndcg5, ndcg10
