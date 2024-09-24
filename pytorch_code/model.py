@@ -140,18 +140,37 @@ def train_test(model, train_data, test_data):
 
     print('start predicting: ', datetime.datetime.now())
     model.eval()
-    hit, mrr = [], []
+
+    hit1, hit5, hi10, ndcg5, ndcg10 = [], [], [], [], []
+    
+    # hit, mrr = [], []
     slices = test_data.generate_batch(model.batch_size)
     for i in slices:
         targets, scores = forward(model, i, test_data)
-        sub_scores = scores.topk(20)[1]
-        sub_scores = trans_to_cpu(sub_scores).detach().numpy()
-        for score, target, mask in zip(sub_scores, targets, test_data.mask):
-            hit.append(np.isin(target - 1, score))
-            if len(np.where(score == target - 1)[0]) == 0:
-                mrr.append(0)
+        sub_scores_1, sub_scores_5, sub_scores_10 = scores.topk(1)[1], scores.topk(5)[1], scores.topk(10)[1]
+        sub_scores_1 = trans_to_cpu(sub_scores_1).detach().numpy()
+        sub_scores_5 = trans_to_cpu(sub_scores_5).detach().numpy()
+        sub_scores_10 = trans_to_cpu(sub_scores_10).detach().numpy()
+
+        for score, target, mask in zip(sub_scores_1, targets, test_data.mask):
+            hit1.append(np.isin(target -1, score))
+
+        for score, target, mask in zip(sub_scores_5, targets, test_data.mask):
+            hit5.append(np.isin(target -1, score))
+            if len(np.where(score == target -1)[0]) == 0:
+                ndcg5.append(0)
             else:
-                mrr.append(1 / (np.where(score == target - 1)[0][0] + 1))
-    hit = np.mean(hit) * 100
-    mrr = np.mean(mrr) * 100
-    return hit, mrr
+                index = np.where(score == target - 1)[0][0]
+                ndcg5.append(1 / math.log(index + 2, 2))
+
+        for score, target, mask in zip(sub_scores_10, targets, test_data.mask):
+            hit10.append(np.isin(target - 1, score))
+            if len(np.where(score == target -1)[0]) == 0:
+                ndcg10.append(0)
+            else:
+                index = np.where(score == target - 1)[0][0]
+                ndcg10.append(1 / math.log(index + 2, 2))
+
+    hit1, hit5, hit10 = np.mean(hit1) * 100, np.mean(hit5) * 100, np.mean(hit10) * 100
+    ndcg5, ndcg10 = np.mean(ndcg5) * 100, np.mean(ndcg10) * 100
+    return hit1, hit5, hit10, ndcg5, ndcg10
