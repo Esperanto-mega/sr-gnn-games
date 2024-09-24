@@ -13,7 +13,7 @@ from utils import build_graph, Data, split_validation
 from model import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='sample', help='dataset name: diginetica/yoochoose1_4/yoochoose1_64/sample')
+parser.add_argument('--dataset', default='Instruments', help='dataset name: Instruments/Games/Arts')
 parser.add_argument('--batchSize', type=int, default=100, help='input batch size')
 parser.add_argument('--hiddenSize', type=int, default=100, help='hidden state size')
 parser.add_argument('--epoch', type=int, default=30, help='the number of epochs to train for')
@@ -31,45 +31,62 @@ print(opt)
 
 
 def main():
-    train_data = pickle.load(open('../datasets/' + opt.dataset + '/train.txt', 'rb'))
+    train_data = pickle.load(open('/datain/v-yinju/rqvae-zzx/data/SR-GNN/' + opt.dataset + '/train.txt', 'rb'))
     if opt.validation:
         train_data, valid_data = split_validation(train_data, opt.valid_portion)
         test_data = valid_data
     else:
-        test_data = pickle.load(open('../datasets/' + opt.dataset + '/test.txt', 'rb'))
+        test_data = pickle.load(open('/datain/v-yinju/rqvae-zzx/data/SR-GNN/' + opt.dataset + '/test.txt', 'rb'))
     # all_train_seq = pickle.load(open('../datasets/' + opt.dataset + '/all_train_seq.txt', 'rb'))
     # g = build_graph(all_train_seq)
     train_data = Data(train_data, shuffle=True)
     test_data = Data(test_data, shuffle=False)
     # del all_train_seq, g
-    if opt.dataset == 'diginetica':
-        n_node = 43098
-    elif opt.dataset == 'yoochoose1_64' or opt.dataset == 'yoochoose1_4':
-        n_node = 37484
+    
+    # number of items
+    if opt.dataset == 'Instruments':
+        n_node = 9922
+    elif opt.dataset == 'Games':
+        n_node = 16859
+    elif: opt.dataset == 'Arts'
+        n_node = 20956
     else:
         n_node = 310
 
     model = trans_to_cuda(SessionGraph(opt, n_node))
 
     start = time.time()
-    best_result = [0, 0]
-    best_epoch = [0, 0]
+    best_result = [0,0,0,0,0]
+    best_epoch = [0,0,0,0,0]
     bad_counter = 0
     for epoch in range(opt.epoch):
         print('-------------------------------------------------------')
         print('epoch: ', epoch)
-        hit, mrr = train_test(model, train_data, test_data)
+        hit1, hit5, hit10, ndcg5, ndcg10 = train_test(model, train_data, test_data)
         flag = 0
-        if hit >= best_result[0]:
-            best_result[0] = hit
+        if hit1 >= best_result[0]:
+            best_result[0] = hit1
             best_epoch[0] = epoch
             flag = 1
-        if mrr >= best_result[1]:
-            best_result[1] = mrr
+        if hit5 >= best_result[1]:
+            best_result[1] = hit5
             best_epoch[1] = epoch
             flag = 1
+        if hit10 >= best_result[2]:
+            best_result[2] = hit10
+            best_epoch[2] = epoch
+            flag = 1
+        if ndcg5 >= best_result[3]:
+            best_result[3] = ndcg5
+            best_epoch[3] = epoch
+            flag = 1
+        if ndcg10 >= best_result[4]:
+            best_result[4] = ndcg10
+            best_epoch[4] = epoch
+            flag = 1
         print('Best Result:')
-        print('\tRecall@20:\t%.4f\tMMR@20:\t%.4f\tEpoch:\t%d,\t%d'% (best_result[0], best_result[1], best_epoch[0], best_epoch[1]))
+        print('\thit@1:\t%.4f\thit@5:\t%.4f\thit@10:\t%.4f\tndcg@5:\t%.4f\tndcg@10:\t%.4f\tEpoch:\t%d,\t%d'% (best_result[0], best_result[1], best_result[2], best_result[3], best_result[4], 
+                                                                                                              best_epoch[0], best_epoch[1], best_epoch[2], best_epoch[3], best_epoch[4]))
         bad_counter += 1 - flag
         if bad_counter >= opt.patience:
             break
