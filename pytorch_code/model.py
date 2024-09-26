@@ -165,7 +165,7 @@ def train_test(model, train_data, test_data):
 
         for score, target, mask in zip(sub_scores_10, targets, test_data.mask):
             hit10.append(np.isin(target, score))
-            if len(np.where(score == target -1)[0]) == 0:
+            if len(np.where(score == target)[0]) == 0:
                 ndcg10.append(0)
             else:
                 index = np.where(score == target)[0][0]
