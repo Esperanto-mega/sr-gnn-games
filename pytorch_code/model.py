@@ -143,10 +143,14 @@ def train_test(model, train_data, test_data):
 
     hit1, hit5, hit10, ndcg5, ndcg10 = [], [], [], [], []
     
+    import time
     # hit, mrr = [], []
     slices = test_data.generate_batch(model.batch_size)
     for i in slices:
+        start = time.time()
         targets, scores = forward(model, i, test_data)
+        end = time.time()
+        print('Inference time:', end - start)
         sub_scores_1, sub_scores_5, sub_scores_10 = scores.topk(1)[1], scores.topk(5)[1], scores.topk(10)[1]
         sub_scores_1 = trans_to_cpu(sub_scores_1).detach().numpy()
         sub_scores_5 = trans_to_cpu(sub_scores_5).detach().numpy()
